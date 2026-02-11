@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { Address } from "viem";
 import type { Abi } from "viem";
 import {
@@ -12,6 +12,16 @@ import {
 } from "./contract";
 import { CHAIN_RPC_OPTIONS, getPresetRpcValue } from "./constants/rpc";
 import "./App.css";
+
+/** User-friendly short message from long viem/MetaMask errors; full text in details. */
+function getErrorSummary(fullError: string): { summary: string; details: string } {
+  const s = fullError.trim();
+  if (s.includes("User denied") || s.includes("User rejected")) return { summary: "Transaction rejected in MetaMask.", details: s };
+  if (s.includes("insufficient funds")) return { summary: "Insufficient funds for this transaction.", details: s };
+  if (s.includes("revert") || s.includes("reverted")) return { summary: "Contract call reverted. Check inputs and permissions.", details: s };
+  if (s.length > 120) return { summary: s.slice(0, 120).trim() + "…", details: s };
+  return { summary: s, details: s };
+}
 
 type AbiInput = { name: string; internalType: string; type: string };
 
@@ -36,6 +46,8 @@ function ContractForm() {
   const [error, setError] = useState("");
   const [walletAddress, setWalletAddress] = useState<Address | null>(null);
   const [customAbiJson, setCustomAbiJson] = useState("");
+  const [errorDetailsOpen, setErrorDetailsOpen] = useState(false);
+  useEffect(() => setErrorDetailsOpen(false), [error]);
 
   const parsedCustomAbi = useMemo(() => {
     const result = parseCustomAbi(customAbiJson);
@@ -282,7 +294,24 @@ function ContractForm() {
           </div>
         )}
 
-        {error && <div className="error">{error}</div>}
+        {error && (
+          <div className="error-box" role="alert">
+            <p className="error-summary">{getErrorSummary(error).summary}</p>
+            {getErrorSummary(error).details.length > 80 && (
+              <>
+                <button
+                  type="button"
+                  className="error-details-toggle"
+                  onClick={() => setErrorDetailsOpen((o) => !o)}
+                  aria-expanded={errorDetailsOpen}
+                >
+                  {errorDetailsOpen ? "Hide details" : "Show details"}
+                </button>
+                {errorDetailsOpen && <pre className="error-details">{getErrorSummary(error).details}</pre>}
+              </>
+            )}
+          </div>
+        )}
 
         <div className="actions">
           {selectedFn && (
