@@ -297,3 +297,21 @@
   max-height: 20rem;
   overflow-y: auto;
 }
+
+.explorer-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  background: #334155;
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.explorer-link:hover {
+  background: #475569;
+  color: #bfdbfe;
+}

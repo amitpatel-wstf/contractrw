@@ -10,7 +10,7 @@ import {
   getWriteFunctions,
   parseCustomAbi,
 } from "./contract";
-import { CHAIN_RPC_OPTIONS, getPresetRpcValue } from "./constants/rpc";
+import { CHAIN_RPC_OPTIONS, getPresetRpcValue, getExplorerTxUrl } from "./constants/rpc";
 import "./App.css";
 
 /** User-friendly short message from long viem/MetaMask errors; full text in details. */
@@ -47,6 +47,7 @@ function ContractForm() {
   const [walletAddress, setWalletAddress] = useState<Address | null>(null);
   const [customAbiJson, setCustomAbiJson] = useState("");
   const [errorDetailsOpen, setErrorDetailsOpen] = useState(false);
+  const [lastTxChainId, setLastTxChainId] = useState<number | null>(null);
   useEffect(() => setErrorDetailsOpen(false), [error]);
 
   const parsedCustomAbi = useMemo(() => {
@@ -180,6 +181,7 @@ function ContractForm() {
         account,
         chain,
       });
+      setLastTxChainId(chainId);
       setResult(JSON.stringify({ status: "success", hash }, null, 2));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -340,6 +342,28 @@ function ContractForm() {
       {result && (
         <div className="card result-card">
           <pre>{result}</pre>
+          {(() => {
+            try {
+              const parsed = JSON.parse(result) as { status?: string; hash?: string };
+              const hash = typeof parsed?.hash === "string" ? parsed.hash : null;
+              const explorerUrl = hash && lastTxChainId ? getExplorerTxUrl(lastTxChainId, hash) : null;
+              if (explorerUrl) {
+                return (
+                  <a
+                    href={explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="explorer-link"
+                  >
+                    View on Explorer →
+                  </a>
+                );
+              }
+            } catch {
+              /* result is not JSON (e.g. read output) */
+            }
+            return null;
+          })()}
         </div>
       )}
     </div>

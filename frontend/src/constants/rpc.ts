@@ -116,3 +116,25 @@ export function getPresetRpcValue(rpcUrl: string): string {
   const all = getAllPresetRpcUrls();
   return all.includes(rpcUrl) ? rpcUrl : "";
 }
+
+/**
+ * Block explorer base URLs by chain ID (for transaction links).
+ * Tx URL format: {baseUrl}/tx/{txHash}
+ */
+export const BLOCK_EXPLORER_BY_CHAIN_ID: Record<number, string> = {
+  1: "https://etherscan.io",
+  137: "https://polygonscan.com",
+  56: "https://bscscan.com",
+  42161: "https://arbiscan.io",
+  8453: "https://basescan.org",
+  10: "https://optimism.etherscan.io",
+  43114: "https://snowtrace.io",
+  250: "https://ftmscan.com",
+};
+
+/** Get block explorer transaction URL; returns null if chain has no known explorer. */
+export function getExplorerTxUrl(chainId: number, txHash: string): string | null {
+  const base = BLOCK_EXPLORER_BY_CHAIN_ID[chainId];
+  if (!base || !txHash?.trim()) return null;
+  return `${base.replace(/\/$/, "")}/tx/${txHash.trim()}`;
+}
